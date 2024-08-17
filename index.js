@@ -32,34 +32,69 @@ async function run() {
     const productCollection = client.db("ProductFinderDb").collection("products");
 
 
-       //Get all products
-       app.get("/products", async (req, res) => {
-        const size = parseInt(req.query.size);
-        const page = parseInt(req.query.page) - 1;
-        const search = req.query.search;
-        let query ;
-        if (search) {
-           const lowercasedSearch = search.toLowerCase();
-           query["productName.text"] = { $in: [new RegExp(lowercasedSearch, "i")] }; // Using regex for case-insensitive search
-        }
-        const result = await productCollection
-           .find(query)
-           .skip(page * size)
-           .limit(size)
-           .toArray();
-        console.log(result);
-        res.send(result);
-     });
+    // Get all products with sorting
+    app.get("/products", async (req, res) => {
+      const size = parseInt(req.query.size);
+      const page = parseInt(req.query.page) - 1;
+      const search = req.query.search;
+      const sort = req.query.sort; // Sort parameter
+  
+      let query = {};
+      if (search) {
+          const lowercasedSearch = search.toLowerCase();
+          query["productName"] = { $regex: new RegExp(lowercasedSearch, "i") };
+      }
+  
+      const cursor = productCollection.find(query);
+  
+      // Handle sorting
+      if (sort === "-price") {
+          cursor.sort({ price: -1 }); // Price Low to High
+      } else if (sort === "price") {
+          cursor.sort({ price: 1 }); // Price High to Low
+      } else if (sort === "-productCreationDate") {
+          cursor.sort({ productCreationDate: -1 }); // Newest First
+      }
+  
+      const result = await cursor.skip(page * size).limit(size).toArray();
+  
+      res.send(result);
+  });
+  
+
+
+    //    //Get all products
+    //    app.get("/products", async (req, res) => {
+    //     const size = parseInt(req.query.size);
+    //     const page = parseInt(req.query.page) - 1;
+    //     const search = req.query.search;
+    //     console.log(search);
+    //     let query = {} ;
+    //     if (search) {
+    //        const lowercasedSearch = search.toLowerCase();
+    //        query["productName"] = { $in: [new RegExp(lowercasedSearch, "i")] }; // Using regex for case-insensitive search
+
+    //       // query["productName"] = { $regex: new RegExp(lowercasedSearch, "i") };
+    //     }
+    //     const result = await productCollection
+    //        .find(query)
+    //        .skip(page * size)
+    //        .limit(size)
+    //        .toArray();
+    //     console.log(result);
+    //     res.send(result);
+    //  });
 
 
 
            //Get all products count
            app.get("/products-count",  async (req, res) => {
-            let query ;
+            let query = {} ;
             const search = req.query.search;
             if (search) {
                const lowercasedSearch = search.toLowerCase();
-               query["productName.text"] = { $in: [new RegExp(lowercasedSearch, "i")] }; // Using regex for case-insensitive search
+               query["productName"] = { $in: [new RegExp(lowercasedSearch, "i")] }; // Using regex for case-insensitive search
+              // query["productName"] = { $regex: new RegExp(lowercasedSearch, "i") };
             }
             const count = await productCollection.countDocuments(query);
             res.send({ count });
