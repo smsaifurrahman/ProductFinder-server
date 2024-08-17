@@ -32,11 +32,44 @@ async function run() {
     const productCollection = client.db("ProductFinderDb").collection("products");
 
 
-  // get all users from db
-      app.get("/products",  async (req, res) => {
-         const result = await productCollection.find().toArray();
-         res.send(result);
-      });
+       //Get all products
+       app.get("/products", async (req, res) => {
+        const size = parseInt(req.query.size);
+        const page = parseInt(req.query.page) - 1;
+        const search = req.query.search;
+        let query ;
+        if (search) {
+           const lowercasedSearch = search.toLowerCase();
+           query["productName.text"] = { $in: [new RegExp(lowercasedSearch, "i")] }; // Using regex for case-insensitive search
+        }
+        const result = await productCollection
+           .find(query)
+           .skip(page * size)
+           .limit(size)
+           .toArray();
+        console.log(result);
+        res.send(result);
+     });
+
+
+
+           //Get all products count
+           app.get("/products-count",  async (req, res) => {
+            let query ;
+            const search = req.query.search;
+            if (search) {
+               const lowercasedSearch = search.toLowerCase();
+               query["productName.text"] = { $in: [new RegExp(lowercasedSearch, "i")] }; // Using regex for case-insensitive search
+            }
+            const count = await productCollection.countDocuments(query);
+            res.send({ count });
+         });
+
+  // // get all users from db
+  //     app.get("/products",  async (req, res) => {
+  //        const result = await productCollection.find().toArray();
+  //        res.send(result);
+  //     });
 
 
 
