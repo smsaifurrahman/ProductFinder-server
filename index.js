@@ -30,43 +30,43 @@ async function run() {
     // await client.connect();
 
     const productCollection = client.db("ProductFinderDb").collection("products");
-   
+
     app.get("/products", async (req, res) => {
-      const size = parseInt(req.query.size);
-      const page = parseInt(req.query.page) - 1;
+      const size = parseInt(req.query.size) || 10; // Default size if not provided
+      const page = (parseInt(req.query.page) || 1) - 1; // Default page if not provided
       const search = req.query.search;
       const sort = req.query.sort; // Sort parameter
       const brandName = req.query.brandName;
       const category = req.query.category;
       const priceRange = req.query.priceRange; // "under100" or "above100"
-  
+    
       let query = {};
-  
+    
       // Handle search keyword
       if (search) {
         const lowercasedSearch = search.toLowerCase();
         query["productName"] = { $regex: new RegExp(lowercasedSearch, "i") };
       }
-  
+    
       // Handle brand name filter
       if (brandName) {
         query["brandName"] = brandName;
       }
-  
+    
       // Handle category filter
       if (category) {
         query["category"] = category;
       }
-  
+    
       // Handle price range filter
       if (priceRange === "under100") {
         query["price"] = { $lte: 100 };
       } else if (priceRange === "above100") {
         query["price"] = { $gt: 100 };
       }
-  
+    
       const cursor = productCollection.find(query);
-  
+    
       // Handle sorting
       if (sort === "-price") {
         cursor.sort({ price: -1 }); // Price High to Low
@@ -75,101 +75,140 @@ async function run() {
       } else if (sort === "-productCreationDate") {
         cursor.sort({ productCreationDate: -1 }); // Newest First
       }
-  
+    
       const result = await cursor.skip(page * size).limit(size).toArray();
-      console.log(result);
+      console.log("Products fetched:", result); // Detailed log
       res.send(result);
-    });
-  
-    // Route to fetch product count with filters and search
-    app.get("/products-count", async (req, res) => {
+  });
+    
+  // Route to fetch product count with filters and search
+  app.get("/products-count", async (req, res) => {
       const search = req.query.search;
       const brandName = req.query.brandName;
       const category = req.query.category;
       const priceRange = req.query.priceRange; // "under100" or "above100"
-  
+    
       let query = {};
-  
+    
       // Handle search keyword
       if (search) {
         const lowercasedSearch = search.toLowerCase();
         query["productName"] = { $regex: new RegExp(lowercasedSearch, "i") };
       }
-  
+    
       // Handle brand name filter
       if (brandName) {
         query["brandName"] = brandName;
       }
-  
+    
       // Handle category filter
       if (category) {
         query["category"] = category;
       }
-  
+    
       // Handle price range filter
       if (priceRange === "under100") {
         query["price"] = { $lte: 100 };
       } else if (priceRange === "above100") {
         query["price"] = { $gt: 100 };
       }
-  
+    
       const count = await productCollection.countDocuments(query);
-      console.log(count);
+      console.log("Total count:", count); // Detailed log
       res.send({ count });
-    });
-
-
-
-
-
-  //   // Get all products with sorting
-  //   app.get("/products", async (req, res) => {
-  //     const size = parseInt(req.query.size);
-  //     const page = parseInt(req.query.page) - 1;
-  //     const search = req.query.search;
-  //     const sort = req.query.sort; // Sort parameter
+  });
   
-  //     let query = {};
-  //     if (search) {
-  //         const lowercasedSearch = search.toLowerCase();
-  //         query["productName"] = { $regex: new RegExp(lowercasedSearch, "i") };
-  //     }
+   
+    // app.get("/products", async (req, res) => {
+    //   const size = parseInt(req.query.size);
+    //   const page = parseInt(req.query.page) - 1;
+    //   const search = req.query.search;
+    //   const sort = req.query.sort; // Sort parameter
+    //   const brandName = req.query.brandName;
+    //   const category = req.query.category;
+    //   const priceRange = req.query.priceRange; // "under100" or "above100"
   
-  //     const cursor = productCollection.find(query);
+    //   let query = {};
   
-  //     // Handle sorting
-  //     if (sort === "-price") {
-  //         cursor.sort({ price: -1 }); // Price Low to High
-  //     } else if (sort === "price") {
-  //         cursor.sort({ price: 1 }); // Price High to Low
-  //     } else if (sort === "-productCreationDate") {
-  //         cursor.sort({ productCreationDate: -1 }); // Newest First
-  //     }
+    //   // Handle search keyword
+    //   if (search) {
+    //     const lowercasedSearch = search.toLowerCase();
+    //     query["productName"] = { $regex: new RegExp(lowercasedSearch, "i") };
+    //   }
   
-  //     const result = await cursor.skip(page * size).limit(size).toArray();
-  //     console.log(result);
-  //     res.send(result);
-  // });
+    //   // Handle brand name filter
+    //   if (brandName) {
+    //     query["brandName"] = brandName;
+    //   }
   
+    //   // Handle category filter
+    //   if (category) {
+    //     query["category"] = category;
+    //   }
+  
+    //   // Handle price range filter
+    //   if (priceRange === "under100") {
+    //     query["price"] = { $lte: 100 };
+    //   } else if (priceRange === "above100") {
+    //     query["price"] = { $gt: 100 };
+    //   }
+  
+    //   const cursor = productCollection.find(query);
+  
+    //   // Handle sorting
+    //   if (sort === "-price") {
+    //     cursor.sort({ price: -1 }); // Price High to Low
+    //   } else if (sort === "price") {
+    //     cursor.sort({ price: 1 }); // Price Low to High
+    //   } else if (sort === "-productCreationDate") {
+    //     cursor.sort({ productCreationDate: -1 }); // Newest First
+    //   }
+  
+    //   const result = await cursor.skip(page * size).limit(size).toArray();
+    //   console.log(result);
+    //   res.send(result);
+    // });
+  
+    // // Route to fetch product count with filters and search
+    // app.get("/products-count", async (req, res) => {
+    //   const search = req.query.search;
+    //   const brandName = req.query.brandName;
+    //   const category = req.query.category;
+    //   const priceRange = req.query.priceRange; // "under100" or "above100"
+  
+    //   let query = {};
+  
+    //   // Handle search keyword
+    //   if (search) {
+    //     const lowercasedSearch = search.toLowerCase();
+    //     query["productName"] = { $regex: new RegExp(lowercasedSearch, "i") };
+    //   }
+  
+    //   // Handle brand name filter
+    //   if (brandName) {
+    //     query["brandName"] = brandName;
+    //   }
+  
+    //   // Handle category filter
+    //   if (category) {
+    //     query["category"] = category;
+    //   }
+  
+    //   // Handle price range filter
+    //   if (priceRange === "under100") {
+    //     query["price"] = { $lte: 100 };
+    //   } else if (priceRange === "above100") {
+    //     query["price"] = { $gt: 100 };
+    //   }
+  
+    //   const count = await productCollection.countDocuments(query);
+    //   console.log(count);
+    //   res.send({ count });
+    // });
 
-  //          //Get all products count
-  //  app.get("/products-count",  async (req, res) => {
-  //           let query = {} ;
-  //           const search = req.query.search;
-  //           if (search) {
-  //              const lowercasedSearch = search.toLowerCase();
-  //              query["productName"] = { $in: [new RegExp(lowercasedSearch, "i")] }; // Using regex for case-insensitive search
-  //             // query["productName"] = { $regex: new RegExp(lowercasedSearch, "i") };
-  //           }
-  //           const count = await productCollection.countDocuments(query);
-  //           res.send({ count });
-  //        });
 
-  // // get all users from db
-  //     app.get("/products",  async (req, res) => {
-  //        const result = await productCollection.find().toArray();
-  //        res.send(result);
-  //     });
+
+
 
 
 
