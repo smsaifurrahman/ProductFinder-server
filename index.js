@@ -77,6 +77,7 @@ async function run() {
       }
   
       const result = await cursor.skip(page * size).limit(size).toArray();
+      console.log(result);
       res.send(result);
     });
   
@@ -113,6 +114,7 @@ async function run() {
       }
   
       const count = await productCollection.countDocuments(query);
+      console.log(count);
       res.send({ count });
     });
 
