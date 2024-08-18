@@ -77,7 +77,7 @@ async function run() {
       }
     
       const result = await cursor.skip(page * size).limit(size).toArray();
-      console.log("Products fetched:", result); // Detailed log
+
       res.send(result);
   });
     
@@ -114,7 +114,7 @@ async function run() {
       }
     
       const count = await productCollection.countDocuments(query);
-  
+      
       res.send({ count });
   });
 
