@@ -66,6 +66,7 @@ async function run() {
       }
     
       const cursor = productCollection.find(query);
+      console.log(cursor);
     
       // Handle sorting
       if (sort === "-price") {
